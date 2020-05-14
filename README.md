@@ -5,7 +5,7 @@ This repository is for the VS Code extension with Teletype libraries. This exten
 
 - Clone the respository to your local system
 ```
-git clone git@github.com:Rijul5/vscode-teletype.git 
+git clone https://github.com/che-incubator/vscode-teletype-guest.git 
 ```
 
 - Open terminal and navigate to the cloned respository and use command _code_ in the terminal to launch VS Code.
