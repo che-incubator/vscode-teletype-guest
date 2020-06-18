@@ -27,6 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 		if (auth_token){
 		let portalIdInput = await getPortalID();
 		if (!portalIdInput) {
+			
 			vscode.window.showInformationMessage("No Portal ID has been entered. Please try again");
 		}
 		else {
@@ -46,6 +47,7 @@ async function getPortalID() {
 
 
 async function joinPortal(portalId: any,auth_token:any) {
+	console.log('Inside the function call of JoinPortal');
 	
 	let textEditor = vscode.window.activeTextEditor;
 	let client, portal_binding;
@@ -64,9 +66,14 @@ async function joinPortal(portalId: any,auth_token:any) {
 			// await client.signIn(constants.AUTH_TOKEN);
 			await client.signIn(auth_token);
 
+			console.log('Inside the try block of creating teletype client');
+
+
 			
 
 		} catch (e) {
+			console.log('Inside the catch block of creating teletype client');
+
 			console.log("Exception Error Message " + e);
 		}
 
