@@ -49,14 +49,15 @@ export default class PortalBinding {
 	}
 
 	async initialize() {
-		try {
+		// try {
 			this.portal = await this.client.joinPortal(this.portalId);
 			this.portal.setDelegate(this);
 			vscode.window.showInformationMessage('Joined Portal with ID' + ' ' + this.portalId + ' ');			
 			this.registerWorkspaceEvents();
-		} catch (error) {
-			vscode.window.showErrorMessage('Unable to join the Portal with ID' + ' ' + this.portalId + ' ');
-		}
+		// } 
+		// catch (error) {
+		// 	vscode.window.showErrorMessage('Unable to join the Portal with ID' + ' ' + this.portalId + ' ');
+		// }
 	}
 
 	private registerWorkspaceEvents () {

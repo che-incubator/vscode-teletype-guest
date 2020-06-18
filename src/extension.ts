@@ -22,14 +22,18 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log('Great, your extension "vscode-teletype" is now active!');
 	let disposable = vscode.commands.registerCommand('extension.join-portal', async () => {
 
+		
+		let auth_token = await vscode.window.showInputBox({ prompt: 'Enter your GitHub AuthToken' });
+		if (auth_token){
 		let portalIdInput = await getPortalID();
 		if (!portalIdInput) {
 			vscode.window.showInformationMessage("No Portal ID has been entered. Please try again");
 		}
 		else {
 			vscode.window.showInformationMessage('Trying to Join Portal with ID' + ' ' + portalIdInput + ' ');
-			await joinPortal(portalIdInput);
+			await joinPortal(portalIdInput,auth_token);
 		}
+	}
 
 	});
 	context.subscriptions.push(disposable);
@@ -41,10 +45,11 @@ async function getPortalID() {
 }
 
 
-async function joinPortal(portalId: any) {
+async function joinPortal(portalId: any,auth_token:any) {
+	
 	let textEditor = vscode.window.activeTextEditor;
 	let client, portal_binding;
-	if (constants.AUTH_TOKEN !== '') {
+	if (auth_token !== '') {
 		try {
 			client = new TeletypeClient({
 				pusherKey: constants.PUSHER_KEY,
@@ -56,7 +61,8 @@ async function joinPortal(portalId: any) {
 			);
 
 			await client.initialize();
-			await client.signIn(constants.AUTH_TOKEN);
+			// await client.signIn(constants.AUTH_TOKEN);
+			await client.signIn(auth_token);
 
 			
 
