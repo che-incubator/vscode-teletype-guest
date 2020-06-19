@@ -58,8 +58,12 @@ export default class PortalBinding {
 			vscode.window.showInformationMessage('Joined Portal with ID' + ' ' + this.portalId + ' ');			
 			this.registerWorkspaceEvents();
 		} 
-		catch (error) {
+		catch (Error) {
 			console.log('Inside the catch block of setting delegate');
+			console.log(Error.message);
+
+			console.log('After error message');
+
 
 			vscode.window.showErrorMessage('Unable to join the Portal with ID' + ' ' + this.portalId + ' ');
 		}
