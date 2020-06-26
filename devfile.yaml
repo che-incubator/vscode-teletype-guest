@@ -1,90 +1,54 @@
-# A devfile to setup a vscode-teletype extension in Che.
-
-apiVersion: 1.0.0
 metadata:
-  name: vscode-teletype
-
+  name: vscode-teletype2
 projects:
-
-  - name: vscode-teletype
+  - name: vscode-teletype2
     source:
-      location: 'https://github.com/Rijul5/vscode-teletype'
+      location: 'https://github.com/Rijul5/vscode-teletype-guest.git'
       type: git
       branch: master
-
 components:
-
-  - alias: vscode-extension-sidecar
+  - mountSources: true
+    memoryLimit: 1024Mi
     type: dockerimage
-    image: eclipse/che-theia-endpoint-runtime:7.0.0-next
+    image: sunix/git-devtools
+    alias: git
+  - mountSources: true
+    endpoints:
+      - name: theia-dev-flow
+        port: 3010
+        attributes:
+          protocol: http
+          public: 'true'
+    memoryLimit: 1024Mi
+    type: dockerimage
+    image: 'eclipse/che-theia-dev:nightly'
+    alias: che-dev
+  - id: eclipse/che-theia/next
+    memoryLimit: 768Mi
+    type: cheEditor
+    alias: che-theia
+    env:
+      - value: '0'
+        name: NODE_TLS_REJECT_UNAUTHORIZED
+  - id: ms-vscode/node-debug2/latest
+    type: chePlugin
+  - mountSources: true
     endpoints:
       - name: theia-remote-endpoint
         port: 10000
         attributes:
           protocol: ws
           public: 'true'
-    memoryLimit: 512M
-    mountSources: true
-
-  - alias: git
+    memoryLimit: 1024Mi
     type: dockerimage
-    image: sunix/git-devtools
-    mountSources: true
-    memoryLimit: 256M
-
-  - alias: che-dev
+    image: 'eclipse/che-theia-endpoint-runtime:7.0.0-next'
+    alias: vscode-extension-sidecar
+  - mountSources: true
+    memoryLimit: 2Gi
     type: dockerimage
-    image: eclipse/che-theia-dev:nightly
-    mountSources: true
-    endpoints:
-      - name: "theia-dev-flow"
-        port: 3010
-        attributes:
-          protocol: http
-          public: 'true'
-    memoryLimit: 1024M
-
-  - id: redhat/vscode-yaml/latest
-    type: chePlugin
-
-  - id: che-incubator/typescript/latest
-    type: chePlugin
-    memoryLimit: 1024M
-
-  - type: cheEditor
-    alias: theia-editor
-    id: eclipse/che-theia/7.0.0-next
-
-commands:
-
-  - name: build ... vscode ext
-    actions:
-      - type: exec
-        component: che-dev
-        command: npm install -g vsce && npm install && vsce package
-        workdir: /projects/vscode-teletype/
-
-  - name: run ... remote vscode ext
-    actions:
-      - type: exec
-        component: vscode-extension-sidecar
-        command: >
-                 export THEIA_PLUGIN_ENDPOINT_DISCOVERY_PORT='2504' &&
-                 export THEIA_PLUGINS='local-dir:///projects/vscode-teletype/' &&
-                 export THEIA_PLUGIN_ENDPOINT_PORT='10000' &&
-                 node /home/theia/lib/node/plugin-remote.js
-        workdir: /home/theia/
-  
-  - name: run ... HOSTED che-theia + detect remote vscode ext
-    actions:
-      - type: exec
-        component: theia-editor
-        command: >
-                 kill `cat /tmp/node_theiadev.pid` &> /dev/null;
-                 mkdir -p /tmp/theiadev_projects &&
-                 export THEIA_PLUGIN_ENDPOINT_DISCOVERY_PORT='2504' &&
-                 export CHE_PROJECTS_ROOT=/tmp/theiadev_projects &&
-                 node src-gen/backend/main.js /tmp/theiadev_projects --hostname=0.0.0.0 --port=3130 & echo $!> /tmp/node_theiadev.pid ; wait `cat /tmp/node_theiadev.pid`
-        workdir: /home/theia
-
-
+    volumes:
+      - name: m2
+        containerPath: /home/user/.m2
+    image: 'rijulsaini/vscode-teletype-deps:latest'
+    alias: xvfb
+apiVersion: 1.0.0
