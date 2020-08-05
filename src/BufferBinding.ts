@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 
-import { BufferProxy } from '@atom/teletype-client';
+import { BufferProxy } from 'teletype-client-modified';
 
 import { Position, TextUdpate } from './teletype_types';
 

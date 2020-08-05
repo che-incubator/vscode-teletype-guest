@@ -1,6 +1,6 @@
 const assert = require('assert');
 import * as vscode from 'vscode';
-import { TeletypeClient, Errors, Portal, FollowState, EditorProxy, BufferProxy } from '@atom/teletype-client';
+import { TeletypeClient, Errors, Portal, FollowState, EditorProxy, BufferProxy } from 'teletype-client-modified';
 import BufferBinding from './BufferBinding';
 import EditorBinding from './EditorBinding';
 

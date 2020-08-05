@@ -1,7 +1,7 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { TeletypeClient } from '@atom/teletype-client';
+import { TeletypeClient } from 'teletype-client-modified';
 import PortalBinding from './PortalBinding';
 
 

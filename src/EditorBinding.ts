@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { EditorProxy, Portal } from '@atom/teletype-client';
+import { EditorProxy, Portal } from 'teletype-client-modified';
 
 import { SelectionMap, Selection, Position, Range } from './teletype_types';
 

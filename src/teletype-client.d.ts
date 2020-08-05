@@ -1,4 +1,4 @@
-declare module '@atom/teletype-client' {
+declare module 'teletype-client-modified' {
 
     export class BufferProxy {
 		onDidChangeBuffer: any;
