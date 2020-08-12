@@ -53,7 +53,7 @@
 	"dependencies": {
 		"cross-spawn": "^7.0.3",
 		"electron-eval": "^0.9.10",
-		"electron-webrtc-patched": "^0.3.0",
+		"wrtc": "^0.4.1",
 		"google-protobuf": "^3.12.4",
 		"mkdirp-promise": "^5.0.1",
 		"node-fetch": "^2.6.0",
