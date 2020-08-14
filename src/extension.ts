@@ -8,8 +8,7 @@ import PortalBinding from './PortalBinding';
 const fetch = require('node-fetch');
 const constants = require('./constants');
 const globalAny: any = global;
-// const wrtc = require('electron-webrtc-patched')();
-const wrtc = require('wrtc');
+const wrtc = require('electron-webrtc-patched')();
 
 globalAny.window = {};
 globalAny.window = global;
