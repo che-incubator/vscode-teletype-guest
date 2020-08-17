@@ -9,6 +9,7 @@ const fetch = require('node-fetch');
 const constants = require('./constants');
 const globalAny: any = global;
 const wrtc = require('electron-webrtc-patched')();
+// const wrtc = require('webrtc');
 
 globalAny.window = {};
 globalAny.window = global;
