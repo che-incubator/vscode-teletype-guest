@@ -43,7 +43,7 @@
 		"source-map-loader": "^0.2.4",
 		"tslint": "^5.20.1",
 		"typescript": "^3.9.7",
-		"vsce": "~1.78.0",
+		"vsce": "~1.71.0",
 		"vscode": "^1.1.37",
 		"webpack": "^4.44.1",
 		"webpack-cli": "^3.3.12"
@@ -52,6 +52,7 @@
 		"@atom/teletype-client": "github:Rijul5/teletype-client",
 		"electron-webrtc-patched": "^0.3.0",
 		"google-protobuf": "^3.12.4",
+		"headless": "git+https://github.com/Rijul5/node-headless.git",
 		"mkdirp-promise": "^5.0.1",
 		"node-fetch": "^2.6.0",
 		"webrtc": "^1.14.1"
