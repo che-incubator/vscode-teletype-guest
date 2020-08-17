@@ -50,17 +50,29 @@ export default class PortalBinding {
 
 	async initialize() {
 		try {
-
 			console.log('Inside the try block of setting delegate');
+
+			if (this.client !== undefined){
+				console.log('This client is not undefined');
+			}
+
+			if (this.editor !== undefined){
+				console.log('This editor is not undefined');
+			}
+
+			if (this.portalId !== undefined){
+				console.log('This portalId is not undefined' + this.portalId);
+			}
 
 			this.portal = await this.client.joinPortal(this.portalId);
 			this.portal.setDelegate(this);
 			vscode.window.showInformationMessage('Joined Portal with ID' + ' ' + this.portalId + ' ');			
 			this.registerWorkspaceEvents();
 		} 
-		catch (error) {
+		catch (Error) {
 			console.log('Inside the catch block of setting delegate');
-
+			console.log(Error.message);
+			console.log('After error message');
 			vscode.window.showErrorMessage('Unable to join the Portal with ID' + ' ' + this.portalId + ' ');
 		}
 	}
