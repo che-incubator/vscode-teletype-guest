@@ -7,5 +7,5 @@ components:
     type: cheEditor
   - type: chePlugin
     reference: >-
-      https://gist.github.com/sunix/a918d5103b381e6f54165746c2fc086f/raw/59547aa9cb6ad9b09b0dca813eeac814fb14a42e/meta.yaml
+      https://gist.github.com/sunix/a918d5103b381e6f54165746c2fc086f/raw/e69ecdd93a4b9a8cbff528733bdc91dce1d3db5c/meta.yaml
 apiVersion: 1.0.0
