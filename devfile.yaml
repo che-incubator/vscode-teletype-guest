@@ -7,5 +7,5 @@ components:
     type: cheEditor
   - type: chePlugin
     reference: >-
-      https://raw.githubusercontent.com/Rijul5/che-plugin-registry/master/v3/plugins/ms-vscode/vscode-teletype/0.1.1/meta.yaml
+      https://github.com/che-incubator/vscode-teletype-guest/releases/download/untagged-57e67ba2fe011797c0fe/vscode-teletype-0.1.1.vsix
 apiVersion: 1.0.0
