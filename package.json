@@ -43,9 +43,7 @@
 		"source-map-loader": "^0.2.4",
 		"tslint": "^5.20.1",
 		"typescript": "^3.9.7",
-
 		"vsce": "~1.71.0",
-
 		"vscode": "^1.1.37",
 		"webpack": "^4.44.1",
 		"webpack-cli": "^3.3.12"
