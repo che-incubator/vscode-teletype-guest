@@ -15,6 +15,8 @@ globalAny.window = {};
 globalAny.window = global;
 globalAny.window.fetch = fetch;
 globalAny.RTCPeerConnection = wrtc.RTCPeerConnection;
+let auth_token: string | undefined;
+let portalID: string | undefined;
 
 // this method is called when the extension is activated
 // the extension is activated the very first time the command is executed
@@ -24,7 +26,10 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposable = vscode.commands.registerCommand('extension.join-portal', async () => {
 
 		
-		let auth_token = await vscode.window.showInputBox({ prompt: 'Enter your GitHub AuthToken' });
+		if (auth_token === undefined) {
+			auth_token = await vscode.window.showInputBox({ prompt: 'Enter your GitHub AuthToken', password: true, ignoreFocusOut: true });
+		}
+
 		if (auth_token){
 		let portalIdInput = await getPortalID();
 		if (!portalIdInput) {
@@ -42,7 +47,8 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 async function getPortalID() {
-	let portalID = await vscode.window.showInputBox({ prompt: 'Enter ID of the Portal you wish to join' });
+
+	portalID = await vscode.window.showInputBox({ prompt: 'Enter ID of the Portal you wish to join', ignoreFocusOut: true, value: portalID });
 	return portalID;
 }
 
