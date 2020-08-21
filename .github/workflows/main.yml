@@ -80,6 +80,9 @@ jobs:
         with:
           name: vscode-teletype-${{steps.gitversion.outputs.semVer}}.vsix
           path: ${{github.workspace}}/vscode-teletype-${{steps.gitversion.outputs.semVer}}.vsix
+      - name: Set current date as env variable
+        id: datetime
+        run: echo "::set-output name=date::$(date +'%Y%m%d-%H%M')"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -87,7 +90,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          release_name: Release ${{ steps.datetime.outputs.date }} ${{ github.sha }} ${{ github.ref }} 
           draft: true
           prerelease: true
       - name: Upload Release Asset
