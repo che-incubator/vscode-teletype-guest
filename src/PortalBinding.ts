@@ -45,7 +45,6 @@ export default class PortalBinding {
 		this.editorBindingsByEditor = new Map();
 		this.editorProxiesByEditor = new WeakMap();
 		this.tetherEditorProxyChangeCounter = 0;
-		
 	}
 
 	async initialize() {
@@ -66,9 +65,9 @@ export default class PortalBinding {
 
 			this.portal = await this.client.joinPortal(this.portalId);
 			this.portal.setDelegate(this);
-			vscode.window.showInformationMessage('Joined Portal with ID' + ' ' + this.portalId + ' ');			
+			vscode.window.showInformationMessage('Joined Portal with ID' + ' ' + this.portalId + ' ');
 			this.registerWorkspaceEvents();
-		} 
+		}
 		catch (Error) {
 			console.log('Inside the catch block of setting delegate');
 			console.log(Error.message);
@@ -87,7 +86,7 @@ export default class PortalBinding {
 		if(this.bufferBindingsByBuffer){
 		const bufferBinding = this.bufferBindingsByBuffer.get(event.document);
 		if (bufferBinding) {
-			bufferBinding.onDidChangeBuffer(event.contentChanges);
+			bufferBinding.onDidChangeBuffer([...event.contentChanges]);
 		}
 	}
 	}
@@ -104,7 +103,7 @@ export default class PortalBinding {
 	private triggerSelectionChanges(event : vscode.TextEditorSelectionChangeEvent) {
 		const editorBinding = this.editorBindingsByEditor.get(event.textEditor);
 		if (editorBinding) {
-			editorBinding.updateSelections(event.selections);
+			editorBinding.updateSelections([...event.selections]);
 		}
 	}
 
@@ -176,7 +175,7 @@ export default class PortalBinding {
 	}
 
 	async updateTether(state: any, editorProxy: any, position: any) {
-		
+
 		if (editorProxy) {
 			this.lastEditorProxyChangePromise = this.lastEditorProxyChangePromise.then(() =>
 				this.onUpdateTether(state, editorProxy, position)
@@ -191,9 +190,9 @@ export default class PortalBinding {
 		}
 		this.tetherPosition = position;
 	}
-	
-	
-	
+
+
+
 	private async onUpdateTether (state:any, editorProxy:any, position:any) {
 		if (state === FollowState.RETRACTED) {
 			const editor = await this.findOrCreateEditorByEditorProxy(editorProxy);
@@ -229,7 +228,6 @@ export default class PortalBinding {
 			if (bufferBinding){
 				bufferBinding.setEditor(editor);
 			}
-			
 
 			editorBinding.setEditorProxy(editorProxy);
 			editorProxy.setDelegate(editorBinding);
@@ -285,7 +283,6 @@ export default class PortalBinding {
 	updateActivePositions(positionsBySiteId: any) {
 		// this.sitePositionsComponent.update({positionsBySiteId})
 	}
-
 
 	siteDidJoin(siteId: any) {
 		this.joinEvents.push(siteId);
