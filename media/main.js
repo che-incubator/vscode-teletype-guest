@@ -42,8 +42,7 @@
   const PUSHER_KEY = 'f119821248b7429bece3';
   const PUSHER_CLUSTER = 'mt1';
   const AUTH_TOKEN = '';
-  const PORTAL_ID = 'a3fd42c5-1909-4d7f-9805-0d5f12fa2a63';
-// atom://teletype/portal/a3fd42c5-1909-4d7f-9805-0d5f12fa2a63
+  const PORTAL_ID = 'e2636c3c-8766-4d78-8006-934587a6eddd';
 
   await joinPortal(PORTAL_ID, AUTH_TOKEN);
 
@@ -69,6 +68,25 @@
         await client.signIn(auth_token);
 
         console.log('Inside the try block of creating teletype client');
+
+        client.initialize();
+
+        const guestPortalDelegate = CheTeletype.createPortalBinding()
+        const guestPortal =  await client.joinPortal(portalId);
+
+        guestPortal.setDelegate(guestPortalDelegate)
+        console.log("activebufferproxyuri : " + guestPortalDelegate.getTetherBufferProxyURI())
+
+        const guestEditorProxy = guestPortalDelegate.getTetherEditorProxy()
+
+        const guestBufferProxy = guestEditorProxy.bufferProxy
+
+        const guestBufferDelegate = CheTeletype.createBufferBinding()
+        guestBufferProxy.setDelegate(guestBufferDelegate)
+
+        guestBufferProxy.setTextInRange(...guestBufferDelegate.insert({row: 0, column: 0},'hello from a browser\n'))
+        guestBufferProxy.setTextInRange({row:0,column:0},{row: 0, column: 0}, "test");
+
       } catch (e) {
         console.log('Inside the catch block of creating teletype client');
 
