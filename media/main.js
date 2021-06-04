@@ -42,7 +42,8 @@
   const PUSHER_KEY = 'f119821248b7429bece3';
   const PUSHER_CLUSTER = 'mt1';
   const AUTH_TOKEN = '';
-  const PORTAL_ID = '';
+  const PORTAL_ID = 'a3fd42c5-1909-4d7f-9805-0d5f12fa2a63';
+// atom://teletype/portal/a3fd42c5-1909-4d7f-9805-0d5f12fa2a63
 
   await joinPortal(PORTAL_ID, AUTH_TOKEN);
 

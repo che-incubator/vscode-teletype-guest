@@ -85,8 +85,8 @@ function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
 
 		// And restrict the webview to only loading content from our extension's `media` directory.
 		localResourceRoots: [
-			vscode.Uri.joinPath(extensionUri, 'out'),
-			vscode.Uri.joinPath(extensionUri, 'media'),
+			(vscode.Uri as any).joinPath(extensionUri, 'out'),
+			(vscode.Uri as any).joinPath(extensionUri, 'media'),
 		],
 	};
 }
@@ -215,16 +215,16 @@ class TeletypeCodingPanel {
 
 	private _getHtmlForWebview(webview: vscode.Webview, catGifPath: string) {
 		// Local path to main script run in the webview
-		const scriptPathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'media', 'main.js');
-		const teletypeScriptPathOnDisk = vscode.Uri.joinPath(this._extensionUri, 'media', 'cheteletype.js');
+		const scriptPathOnDisk = (vscode.Uri as any).joinPath(this._extensionUri, 'media', 'main.js');
+		const teletypeScriptPathOnDisk = (vscode.Uri as any).joinPath(this._extensionUri, 'media', 'cheteletype.js');
 
 		// And the uri we use to load this script in the webview
 		const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
 		const teletypeScriptUri = webview.asWebviewUri(teletypeScriptPathOnDisk);
 
 		// Local path to css styles
-		const styleResetPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'reset.css');
-		const stylesPathMainPath = vscode.Uri.joinPath(this._extensionUri, 'media', 'vscode.css');
+		const styleResetPath = (vscode.Uri as any).joinPath(this._extensionUri, 'media', 'reset.css');
+		const stylesPathMainPath = (vscode.Uri as any).joinPath(this._extensionUri, 'media', 'vscode.css');
 
 		// Uri to load styles into webview
 		const stylesResetUri = webview.asWebviewUri(styleResetPath);
@@ -242,7 +242,7 @@ class TeletypeCodingPanel {
 					Use a content security policy to only allow loading images from https or from our extension directory,
 					and only allow scripts that have a specific nonce.
 				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'unsafe-eval' 'nonce-${nonce}';">
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src https: wss:; style-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src ${webview.cspSource} 'unsafe-eval' 'nonce-${nonce}';">
 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
