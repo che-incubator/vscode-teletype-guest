@@ -17,8 +17,6 @@
 	],
 	"activationEvents": [
 		"onCommand:extension.join-portal",
-		"onCommand:teletypeCoding.start",
-		"onCommand:teletypeCoding.doRefactor",
 		"onWebviewPanel:teletypeCoding"
 	],
 	"main": "./out/extension.js",
@@ -27,16 +25,6 @@
 			{
 				"command": "extension.join-portal",
 				"title": "Join Portal"
-			},
-			{
-				"command": "teletypeCoding.start",
-				"title": "Start cat coding session",
-				"category": "Teletype Coding"
-			},
-			{
-				"command": "teletypeCoding.doRefactor",
-				"title": "Do some refactoring",
-				"category": "Teletype Coding"
 			}
 		]
 	},

@@ -4,66 +4,51 @@ import * as vscode from 'vscode';
 import { TeletypeClient } from '@atom/teletype-client';
 import PortalBinding from './PortalBinding';
 
-
 const fetch = require('node-fetch');
 const constants = require('./constants');
 const globalAny: any = global;
 // const wrtc = require('electron-webrtc-patched')();
 const wrtc = require('wrtc');
 
-const cats = {
-	'Coding Cat': 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
-	'Compiling Cat': 'https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif',
-	'Testing Cat': 'https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif'
-};
-
 globalAny.window = {};
 globalAny.window = global;
 globalAny.window.fetch = fetch;
 globalAny.RTCPeerConnection = wrtc.RTCPeerConnection;
-let auth_token: string | undefined;
-let portalID: string | undefined;
 
 // this method is called when the extension is activated
 // the extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+	const disposable = vscode.commands.registerCommand('extension.join-portal', async () => {
+		if (!context.globalState.get('authToken')) {
+			const authTokenInput = await vscode.window.showInputBox({
+				prompt: 'Enter your GitHub AuthToken',
+				password: true,
+				ignoreFocusOut: true,
+			});
 
-	console.log('Great, your extension "vscode-teletype" is now active!');
-	let disposable = vscode.commands.registerCommand('extension.join-portal', async () => {
-
-
-		if (auth_token === undefined) {
-			auth_token = await vscode.window.showInputBox({ prompt: 'Enter your GitHub AuthToken', password: true, ignoreFocusOut: true });
-		}
-
-		if (auth_token){
-		let portalIdInput = await getPortalID();
-		if (!portalIdInput) {
-
-			vscode.window.showInformationMessage("No Portal ID has been entered. Please try again");
-		}
-		else {
-			vscode.window.showInformationMessage('Trying to Join Portal with ID' + ' ' + portalIdInput + ' ');
-			await joinPortal(portalIdInput,auth_token);
-		}
-	}
-
-	});
-	context.subscriptions.push(disposable);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand('teletypeCoding.start', () => {
-			TeletypeCodingPanel.createOrShow(context.extensionUri);
-		})
-	);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand('teletypeCoding.doRefactor', () => {
-			if (TeletypeCodingPanel.currentPanel) {
-				TeletypeCodingPanel.currentPanel.doRefactor();
+			if (authTokenInput) {
+				context.globalState.update('authToken', authTokenInput);
 			}
-		})
-	);
+		}
+
+		if (context.globalState.get('authToken')) {
+			const portalIdInput = await vscode.window.showInputBox({
+				prompt: 'Enter ID of the Portal you wish to join',
+				ignoreFocusOut: true,
+				value: context.globalState.get('portalId'),
+			});
+
+			if (portalIdInput) {
+				context.globalState.update('portalId', portalIdInput);
+				vscode.window.showInformationMessage(`Trying to Join Portal with ID ${portalIdInput}`);
+				TeletypeCodingPanel.createOrShow(context);
+			} else {
+				vscode.window.showInformationMessage('No Portal ID has been entered. Please try again');
+			}
+		}
+	});
+
+	context.subscriptions.push(disposable);
 
 	if (vscode.window.registerWebviewPanelSerializer) {
 		// Make sure we register a serializer in activation event
@@ -72,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
 				console.log(`Got state: ${state}`);
 				// Reset the webview options so we use latest uri for `localResourceRoots`.
 				webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-				TeletypeCodingPanel.revive(webviewPanel, context.extensionUri);
+				TeletypeCodingPanel.revive(webviewPanel, context);
 			}
 		});
 	}
@@ -102,11 +87,11 @@ class TeletypeCodingPanel {
 
 	public static readonly viewType = 'teletypeCoding';
 
+	private readonly _context: vscode.ExtensionContext;
 	private readonly _panel: vscode.WebviewPanel;
-	private readonly _extensionUri: vscode.Uri;
 	private _disposables: vscode.Disposable[] = [];
 
-	public static createOrShow(extensionUri: vscode.Uri) {
+	public static createOrShow(context: vscode.ExtensionContext) {
 		const column = vscode.window.activeTextEditor
 			? vscode.window.activeTextEditor.viewColumn
 			: undefined;
@@ -122,19 +107,23 @@ class TeletypeCodingPanel {
 			TeletypeCodingPanel.viewType,
 			'Teletype Coding',
 			column || vscode.ViewColumn.One,
-			getWebviewOptions(extensionUri),
+			getWebviewOptions(context.extensionUri),
 		);
 
-		TeletypeCodingPanel.currentPanel = new TeletypeCodingPanel(panel, extensionUri);
+		TeletypeCodingPanel.currentPanel = new TeletypeCodingPanel(panel, context);
+
+		TeletypeCodingPanel.currentPanel.init();
 	}
 
-	public static revive(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
-		TeletypeCodingPanel.currentPanel = new TeletypeCodingPanel(panel, extensionUri);
+	public static revive(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
+		TeletypeCodingPanel.currentPanel = new TeletypeCodingPanel(panel, context);
+
+		TeletypeCodingPanel.currentPanel.init();
 	}
 
-	private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+	private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
 		this._panel = panel;
-		this._extensionUri = extensionUri;
+		this._context = context;
 
 		// Set the webview's initial html content
 		this._update();
@@ -145,7 +134,7 @@ class TeletypeCodingPanel {
 
 		// Update the content based on view changes
 		this._panel.onDidChangeViewState(
-			e => {
+			(e) => {
 				if (this._panel.visible) {
 					this._update();
 				}
@@ -156,10 +145,10 @@ class TeletypeCodingPanel {
 
 		// Handle messages from the webview
 		this._panel.webview.onDidReceiveMessage(
-			message => {
+			(message) => {
 				switch (message.command) {
-					case 'alert':
-						vscode.window.showErrorMessage(message.text);
+					case 'open-editor':
+						//
 						return;
 				}
 			},
@@ -168,10 +157,19 @@ class TeletypeCodingPanel {
 		);
 	}
 
-	public doRefactor() {
-		// Send a message to the webview webview.
-		// You can send any JSON serializable data.
-		this._panel.webview.postMessage({ command: 'refactor' });
+	public init() {
+		this._panel.webview.postMessage({
+			command: 'init',
+			data: {
+				endpoint: constants.API_URL_BASE,
+				authToken: this._context.globalState.get('authToken') as string,
+				portalId: this._context.globalState.get('portalId') as string,
+				pusher: {
+					key: constants.PUSHER_KEY,
+					cluster: constants.PUSHER_CLUSTER,
+				},
+			},
+		});
 	}
 
 	public dispose() {
@@ -189,42 +187,22 @@ class TeletypeCodingPanel {
 	}
 
 	private _update() {
-		const webview = this._panel.webview;
-
-		// Vary the webview's content based on where it is located in the editor.
-		switch (this._panel.viewColumn) {
-			case vscode.ViewColumn.Two:
-				this._updateForCat(webview, 'Compiling Cat');
-				return;
-
-			case vscode.ViewColumn.Three:
-				this._updateForCat(webview, 'Testing Cat');
-				return;
-
-			case vscode.ViewColumn.One:
-			default:
-				this._updateForCat(webview, 'Coding Cat');
-				return;
-		}
+		this._panel.title = 'Teletype Client';
+		this._panel.webview.html = this._getHtmlForWebview(this._panel.webview);
 	}
 
-	private _updateForCat(webview: vscode.Webview, catName: keyof typeof cats) {
-		this._panel.title = catName;
-		this._panel.webview.html = this._getHtmlForWebview(webview, cats[catName]);
-	}
-
-	private _getHtmlForWebview(webview: vscode.Webview, catGifPath: string) {
+	private _getHtmlForWebview(webview: vscode.Webview) {
 		// Local path to main script run in the webview
-		const scriptPathOnDisk = (vscode.Uri as any).joinPath(this._extensionUri, 'media', 'main.js');
-		const teletypeScriptPathOnDisk = (vscode.Uri as any).joinPath(this._extensionUri, 'media', 'cheteletype.js');
+		const scriptPathOnDisk = (vscode.Uri as any).joinPath(this._context.extensionUri, 'media', 'main.js');
+		const teletypeScriptPathOnDisk = (vscode.Uri as any).joinPath(this._context.extensionUri, 'media', 'cheteletype.js');
 
 		// And the uri we use to load this script in the webview
 		const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
 		const teletypeScriptUri = webview.asWebviewUri(teletypeScriptPathOnDisk);
 
 		// Local path to css styles
-		const styleResetPath = (vscode.Uri as any).joinPath(this._extensionUri, 'media', 'reset.css');
-		const stylesPathMainPath = (vscode.Uri as any).joinPath(this._extensionUri, 'media', 'vscode.css');
+		const styleResetPath = (vscode.Uri as any).joinPath(this._context.extensionUri, 'media', 'reset.css');
+		const stylesPathMainPath = (vscode.Uri as any).joinPath(this._context.extensionUri, 'media', 'vscode.css');
 
 		// Uri to load styles into webview
 		const stylesResetUri = webview.asWebviewUri(styleResetPath);
@@ -252,8 +230,7 @@ class TeletypeCodingPanel {
 				<title>Teletype Coding</title>
 			</head>
 			<body>
-				<!-- <img src="${catGifPath}" width="300" /> -->
-				<h1 id="lines-of-code-counter">0</h1>
+				<h1>Teletype Client Panel</h1>
 
 				<script nonce="${nonce}" src="${teletypeScriptUri}"></script>
 				<script nonce="${nonce}" src="${scriptUri}"></script>
@@ -271,12 +248,7 @@ function getNonce() {
 	return text;
 }
 
-async function getPortalID() {
-	portalID = await vscode.window.showInputBox({ prompt: 'Enter ID of the Portal you wish to join', ignoreFocusOut: true, value: portalID });
-	return portalID;
-}
-
-async function joinPortal(portalId: any,auth_token:any) {
+async function joinPortal(portalId: any, auth_token: any) {
 	console.log('Inside the function call of JoinPortal');
 
 	let textEditor = vscode.window.activeTextEditor;
@@ -307,8 +279,8 @@ async function joinPortal(portalId: any,auth_token:any) {
 			console.log("Exception Error Message " + e);
 		}
 
-		portal_binding = new PortalBinding({ client: client, portalId: portalId, editor: textEditor });
-		await portal_binding.initialize();
+		// portal_binding = new PortalBinding({ client: client, portalId: portalId, editor: textEditor });
+		// await portal_binding.initialize();
 	}
 	else {
 		vscode.window.showErrorMessage("GitHub Auth Token. Please provide it in the constants.ts file");
