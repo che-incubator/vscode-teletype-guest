@@ -16,23 +16,22 @@ export default class PortalBinding {
 	private tetherState: any;
 	private tetherEditorProxy: any;
 	private disposed!: boolean;
-	private lastEditorProxyChangePromise : Promise<void>;
+	private lastEditorProxyChangePromise: Promise<void>;
 	private onAddEditorProxy: any;
 	private onRemoveEditorProxy: any;
 	private joinEvents: any;
-	private editorBindingsByEditorProxy : Map<EditorProxy, EditorBinding>;
-	private bufferBindingsByBufferProxy : Map<BufferProxy, BufferBinding>;
-	private bufferBindingsByBuffer : Map<vscode.TextDocument, BufferBinding>;
-	private editorBindingsByEditor : Map<vscode.TextEditor, EditorBinding>;
-	private editorProxiesByEditor : WeakMap<vscode.TextEditor, EditorProxy>;
+	private editorBindingsByEditorProxy: Map<EditorProxy, EditorBinding>;
+	private bufferBindingsByBufferProxy: Map<BufferProxy, BufferBinding>;
+	private bufferBindingsByBuffer: Map<vscode.TextDocument, BufferBinding>;
+	private editorBindingsByEditor: Map<vscode.TextEditor, EditorBinding>;
+	private editorProxiesByEditor: WeakMap<vscode.TextEditor, EditorProxy>;
 	private hostClosedPortal = false;
 	private hostLostConnection = false;
-    private leaveEvents = [];
-    private editorProxies = new Set();
-    private tetherEditorProxyChangeCounter: any;
-    private tetherPosition = null;
-    private activePositionsBySiteId = {};
-
+	private leaveEvents = [];
+	private editorProxies = new Set();
+	private tetherEditorProxyChangeCounter: any;
+	private tetherPosition = null;
+	private activePositionsBySiteId = {};
 
 	constructor({ client, portalId, editor }: { client: any; portalId: any; editor: any; }) {
 		this.client = client;
@@ -51,15 +50,15 @@ export default class PortalBinding {
 		try {
 			console.log('Inside the try block of setting delegate');
 
-			if (this.client !== undefined){
+			if (this.client !== undefined) {
 				console.log('This client is not undefined');
 			}
 
-			if (this.editor !== undefined){
+			if (this.editor !== undefined) {
 				console.log('This editor is not undefined');
 			}
 
-			if (this.portalId !== undefined){
+			if (this.portalId !== undefined) {
 				console.log('This portalId is not undefined' + this.portalId);
 			}
 
@@ -76,31 +75,31 @@ export default class PortalBinding {
 		}
 	}
 
-	private registerWorkspaceEvents () {
+	private registerWorkspaceEvents() {
 		vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument.bind(this));
 		vscode.workspace.onWillSaveTextDocument(this.saveDocument.bind(this));
 		vscode.window.onDidChangeTextEditorSelection(this.triggerSelectionChanges.bind(this));
 	}
 
-	private onDidChangeTextDocument (event : vscode.TextDocumentChangeEvent) {
-		if(this.bufferBindingsByBuffer){
-		const bufferBinding = this.bufferBindingsByBuffer.get(event.document);
-		if (bufferBinding) {
-			bufferBinding.onDidChangeBuffer([...event.contentChanges]);
+	private onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent) {
+		if (this.bufferBindingsByBuffer) {
+			const bufferBinding = this.bufferBindingsByBuffer.get(event.document);
+			if (bufferBinding) {
+				bufferBinding.onDidChangeBuffer([...event.contentChanges]);
+			}
 		}
 	}
-	}
 
-	private saveDocument (event : vscode.TextDocumentWillSaveEvent) {
-		if(this.bufferBindingsByBuffer){
-		const bufferBinding = this.bufferBindingsByBuffer.get(event.document);
-		if (bufferBinding) {
-			event.waitUntil(bufferBinding.requestSavePromise());
+	private saveDocument(event: vscode.TextDocumentWillSaveEvent) {
+		if (this.bufferBindingsByBuffer) {
+			const bufferBinding = this.bufferBindingsByBuffer.get(event.document);
+			if (bufferBinding) {
+				event.waitUntil(bufferBinding.requestSavePromise());
+			}
 		}
 	}
-}
 
-	private triggerSelectionChanges(event : vscode.TextEditorSelectionChangeEvent) {
+	private triggerSelectionChanges(event: vscode.TextEditorSelectionChangeEvent) {
 		const editorBinding = this.editorBindingsByEditor.get(event.textEditor);
 		if (editorBinding) {
 			editorBinding.updateSelections([...event.selections]);
@@ -132,19 +131,19 @@ export default class PortalBinding {
 	}
 
 	addEditorProxy(editorProxy: any) {
-		if(editorProxy && this.editorProxies){
-		if (typeof this.onAddEditorProxy === "function") {
-			this.onAddEditorProxy(editorProxy);
-		}
-		console.log("addEditorProxy: " + editorProxy.bufferProxy.uri);
-		if (!this.editorProxies.has(editorProxy)) {
-			console.log('Cannot add the same editor proxy multiple times remove/add again');
-			this.editorProxies.delete(editorProxy);
-		}
+		if (editorProxy && this.editorProxies) {
+			if (typeof this.onAddEditorProxy === "function") {
+				this.onAddEditorProxy(editorProxy);
+			}
+			console.log("addEditorProxy: " + editorProxy.bufferProxy.uri);
+			if (!this.editorProxies.has(editorProxy)) {
+				console.log('Cannot add the same editor proxy multiple times remove/add again');
+				this.editorProxies.delete(editorProxy);
+			}
 
-		this.editorProxies.add(editorProxy);
+			this.editorProxies.add(editorProxy);
+		}
 	}
-}
 
 	removeEditorProxy(editorProxy: any) {
 		if (typeof this.onRemoveEditorProxy === "function") {
@@ -193,11 +192,11 @@ export default class PortalBinding {
 
 
 
-	private async onUpdateTether (state:any, editorProxy:any, position:any) {
+	private async onUpdateTether(state: any, editorProxy: any, position: any) {
 		if (state === FollowState.RETRACTED) {
 			const editor = await this.findOrCreateEditorByEditorProxy(editorProxy);
 		} else {
-			this.editorBindingsByEditorProxy.forEach((editor_binding:any) => editor_binding.updateTether(state, undefined));
+			this.editorBindingsByEditorProxy.forEach((editor_binding: any) => editor_binding.updateTether(state, undefined));
 		}
 
 		const editorBinding = this.editorBindingsByEditorProxy.get(editorProxy);
@@ -206,13 +205,13 @@ export default class PortalBinding {
 		}
 	}
 
-	private async findOrCreateEditorByEditorProxy (editorProxy:any) : Promise<vscode.TextEditor> {
-		let editor : vscode.TextEditor;
+	private async findOrCreateEditorByEditorProxy(editorProxy: any): Promise<vscode.TextEditor> {
+		let editor: vscode.TextEditor;
 		let editorBinding = this.editorBindingsByEditorProxy.get(editorProxy);
 		if (editorBinding) {
 			editor = editorBinding.editor;
 		} else {
-			const {bufferProxy} = editorProxy;
+			const { bufferProxy } = editorProxy;
 			const buffer = await this.findOrCreateBufferForBufferProxy(bufferProxy);
 			const bufferBinding = this.bufferBindingsByBufferProxy.get(bufferProxy);
 			await vscode.workspace.openTextDocument(buffer.uri);
@@ -225,7 +224,7 @@ export default class PortalBinding {
 				isHost: false
 			});
 			await vscode.commands.executeCommand('workbench.action.keepEditor');
-			if (bufferBinding){
+			if (bufferBinding) {
 				bufferBinding.setEditor(editor);
 			}
 
@@ -244,8 +243,8 @@ export default class PortalBinding {
 		return editor;
 	}
 
-	private async findOrCreateBufferForBufferProxy (bufferProxy:any) : Promise<vscode.TextDocument> {
-		let buffer : vscode.TextDocument;
+	private async findOrCreateBufferForBufferProxy(bufferProxy: any): Promise<vscode.TextDocument> {
+		let buffer: vscode.TextDocument;
 		let bufferBinding = this.bufferBindingsByBufferProxy.get(bufferProxy);
 		if (bufferBinding) {
 			buffer = bufferBinding.buffer;

@@ -1,7 +1,6 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { TeletypeClient } from '@atom/teletype-client';
 import PortalBinding from './PortalBinding';
 
 const fetch = require('node-fetch');
@@ -113,13 +112,13 @@ class TeletypeCodingPanel {
 
 		TeletypeCodingPanel.currentPanel = new TeletypeCodingPanel(panel, context);
 
-		TeletypeCodingPanel.currentPanel.init();
+		TeletypeCodingPanel.currentPanel.initialize();
 	}
 
 	public static revive(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
 		TeletypeCodingPanel.currentPanel = new TeletypeCodingPanel(panel, context);
 
-		TeletypeCodingPanel.currentPanel.init();
+		TeletypeCodingPanel.currentPanel.initialize();
 	}
 
 	private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
@@ -146,10 +145,22 @@ class TeletypeCodingPanel {
 
 		// Handle messages from the webview
 		this._panel.webview.onDidReceiveMessage(
-			(message) => {
+			async (message) => {
 				switch (message.command) {
+					case 'show-info-message':
+						vscode.window.showInformationMessage(message.data);
+						return;
+
+					case 'show-warn-message':
+						vscode.window.showWarningMessage(message.data);
+						return;
+
+					case 'show-error-message':
+						vscode.window.showErrorMessage(message.data);
+						return;
+
 					case 'open-editor':
-						//
+						await openEditor(message.data);
 						return;
 				}
 			},
@@ -158,7 +169,7 @@ class TeletypeCodingPanel {
 		);
 	}
 
-	public init() {
+	public initialize() {
 		this._panel.webview.postMessage({
 			command: 'init',
 			data: {
@@ -221,7 +232,9 @@ class TeletypeCodingPanel {
 					Use a content security policy to only allow loading images from https or from our extension directory,
 					and only allow scripts that have a specific nonce.
 				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src https: wss:; style-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src ${webview.cspSource} 'unsafe-eval' 'nonce-${nonce}';">
+				<meta
+					http-equiv="Content-Security-Policy"
+					content="default-src 'none'; connect-src https: wss:; style-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src ${webview.cspSource} 'unsafe-eval' 'nonce-${nonce}'; script-src-elem https:">
 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -240,6 +253,23 @@ class TeletypeCodingPanel {
 	}
 }
 
+async function openEditor({ filename, content }: Record<string, string>) {
+	console.log(`Opening document ${filename}`);
+
+	// const textEditor = vscode.window.activeTextEditor;
+	const uri = vscode.Uri.file(filename);
+
+	try {
+		await vscode.window.showTextDocument(uri);
+	} catch (err) {
+		vscode.window.showErrorMessage(err.message);
+	}
+
+	// const portalBinding = new PortalBinding({ client: client, portalId: portalId, editor: textEditor });
+
+	// await portalBinding.initialize();
+}
+
 function getNonce() {
 	let text = '';
 	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -247,45 +277,6 @@ function getNonce() {
 		text += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
 	return text;
-}
-
-async function joinPortal(portalId: any, auth_token: any) {
-	console.log('Inside the function call of JoinPortal');
-
-	let textEditor = vscode.window.activeTextEditor;
-	let client, portal_binding;
-	if (auth_token !== '') {
-		try {
-			client = new TeletypeClient({
-				pusherKey: constants.PUSHER_KEY,
-				pusherOptions: {
-					cluster: constants.PUSHER_CLUSTER
-				},
-				baseURL: constants.API_URL_BASE,
-			}
-			);
-
-			await client.initialize();
-			// await client.signIn(constants.AUTH_TOKEN);
-			await client.signIn(auth_token);
-
-			console.log('Inside the try block of creating teletype client');
-
-
-
-
-		} catch (e) {
-			console.log('Inside the catch block of creating teletype client');
-
-			console.log("Exception Error Message " + e);
-		}
-
-		// portal_binding = new PortalBinding({ client: client, portalId: portalId, editor: textEditor });
-		// await portal_binding.initialize();
-	}
-	else {
-		vscode.window.showErrorMessage("GitHub Auth Token. Please provide it in the constants.ts file");
-	}
 }
 
 export function deactivate() { }
