@@ -3,6 +3,9 @@
 import * as vscode from 'vscode';
 import PortalBinding from './PortalBinding';
 
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const fetch = require('node-fetch');
 const constants = require('./constants');
 const globalAny: any = global;
@@ -41,7 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
 				portalIdInput = portalIdInput.replace("atom://teletype/portal/", "");
 				context.globalState.update('portalId', portalIdInput);
 				vscode.window.showInformationMessage(`Trying to Join Portal with ID ${portalIdInput}`);
-				TeletypeCodingPanel.createOrShow(context);
+				await TeletypeCodingPanel.createOrShow(context);
 			} else {
 				vscode.window.showInformationMessage('No Portal ID has been entered. Please try again');
 			}
@@ -57,7 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
 				console.log(`Got state: ${state}`);
 				// Reset the webview options so we use latest uri for `localResourceRoots`.
 				webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-				TeletypeCodingPanel.revive(webviewPanel, context);
+				await TeletypeCodingPanel.revive(webviewPanel, context);
 			}
 		});
 	}
@@ -88,10 +91,11 @@ class TeletypeCodingPanel {
 	public static readonly viewType = 'teletypeCoding';
 
 	private readonly _context: vscode.ExtensionContext;
+	private readonly _workspace: Workspace;
 	private readonly _panel: vscode.WebviewPanel;
 	private _disposables: vscode.Disposable[] = [];
 
-	public static createOrShow(context: vscode.ExtensionContext) {
+	public static async createOrShow(context: vscode.ExtensionContext) {
 		const column = vscode.window.activeTextEditor
 			? vscode.window.activeTextEditor.viewColumn
 			: undefined;
@@ -112,18 +116,19 @@ class TeletypeCodingPanel {
 
 		TeletypeCodingPanel.currentPanel = new TeletypeCodingPanel(panel, context);
 
-		TeletypeCodingPanel.currentPanel.initialize();
+		await TeletypeCodingPanel.currentPanel.initialize();
 	}
 
-	public static revive(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
+	public static async revive(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
 		TeletypeCodingPanel.currentPanel = new TeletypeCodingPanel(panel, context);
 
-		TeletypeCodingPanel.currentPanel.initialize();
+		await TeletypeCodingPanel.currentPanel.initialize();
 	}
 
 	private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
 		this._panel = panel;
 		this._context = context;
+		this._workspace = new Workspace();
 
 		// Set the webview's initial html content
 		this._update();
@@ -147,6 +152,9 @@ class TeletypeCodingPanel {
 		this._panel.webview.onDidReceiveMessage(
 			async (message) => {
 				switch (message.command) {
+					case 'init.ok':
+						return;
+
 					case 'show-info-message':
 						vscode.window.showInformationMessage(message.data);
 						return;
@@ -160,7 +168,7 @@ class TeletypeCodingPanel {
 						return;
 
 					case 'open-editor':
-						await openEditor(message.data);
+						await this.openEditor(message.data);
 						return;
 				}
 			},
@@ -169,7 +177,8 @@ class TeletypeCodingPanel {
 		);
 	}
 
-	public initialize() {
+	public async initialize() {
+		await this._workspace.initialize();
 		this._panel.webview.postMessage({
 			command: 'init',
 			data: {
@@ -182,6 +191,19 @@ class TeletypeCodingPanel {
 				},
 			},
 		});
+	}
+
+	async openEditor({ filename, content }: Record<string, string>) {
+		console.log(`Opening document ${filename}`);
+
+		try {
+			const tempFilename = await this._workspace.writeFile(filename, content);
+			const uri = vscode.Uri.file(tempFilename);
+
+			await vscode.window.showTextDocument(uri);
+		} catch (err) {
+			vscode.window.showErrorMessage(err.message);
+		}
 	}
 
 	public dispose() {
@@ -253,21 +275,77 @@ class TeletypeCodingPanel {
 	}
 }
 
-async function openEditor({ filename, content }: Record<string, string>) {
-	console.log(`Opening document ${filename}`);
+class Workspace {
+	protected path!: string;
+	protected map: Map<string, string> = new Map();
 
-	// const textEditor = vscode.window.activeTextEditor;
-	const uri = vscode.Uri.file(filename);
+	initialize(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			const basedir = path.join(os.tmpdir(), 'teletype-');
 
-	try {
-		await vscode.window.showTextDocument(uri);
-	} catch (err) {
-		vscode.window.showErrorMessage(err.message);
+			fs.mkdtemp(basedir, (err: Error | null, directory: string) => {
+				if (err) {
+					reject(err);
+				} else {
+					this.path = directory;
+
+					resolve();
+				}
+			});
+		});
 	}
 
-	// const portalBinding = new PortalBinding({ client: client, portalId: portalId, editor: textEditor });
+	exists(filename: string) {
+		return new Promise((resolve, reject) => {
+			fs.stat(filename, (err: any, stat: any) => {
+				if (err === null) {
+					resolve(true);
+				} else if(err.code === 'ENOENT') {
+					resolve(false);
+				} else {
+					reject(err);
+				}
+			});
+		});
+	}
 
-	// await portalBinding.initialize();
+	protected _writeFile(filename: string, content: string): Promise<void> {
+		return new Promise((resolve, reject) => {
+			fs.writeFile(filename, content, (err: Error | null) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve();
+				}
+			});
+		});
+	}
+
+	async writeFile(filename: string, content: string): Promise<string> {
+		const tempFilename = path.join(this.path, filename);
+		const exists = await this.exists(tempFilename);
+
+		if (exists) {
+			await this._writeFile(tempFilename, content);
+
+			return tempFilename;
+		}
+
+		return new Promise((resolve, reject) => {
+			const basedir = path.dirname(filename);
+			const tempDir = path.join(this.path, basedir);
+
+			fs.mkdir(tempDir, { recursive: true }, (err: Error | null) => {
+				if (err) {
+					reject(err);
+				} else {
+					this._writeFile(tempFilename, content)
+						.then(() => resolve(tempFilename))
+						.catch(reject);
+				}
+			});
+		});
+	}
 }
 
 function getNonce() {

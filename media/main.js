@@ -7,6 +7,7 @@
     switch (message.command) {
       case 'init': {
         await joinPortal(message.data);
+        vscode.postMessage({ command: 'init.ok' });
         break;
       }
     }
