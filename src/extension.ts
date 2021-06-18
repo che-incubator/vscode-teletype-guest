@@ -32,13 +32,14 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		if (context.globalState.get('authToken')) {
-			const portalIdInput = await vscode.window.showInputBox({
+			let portalIdInput = await vscode.window.showInputBox({
 				prompt: 'Enter ID of the Portal you wish to join',
 				ignoreFocusOut: true,
 				value: context.globalState.get('portalId'),
 			});
 
 			if (portalIdInput) {
+				portalIdInput = portalIdInput.replace("atom://teletype/portal/", "");
 				context.globalState.update('portalId', portalIdInput);
 				vscode.window.showInformationMessage(`Trying to Join Portal with ID ${portalIdInput}`);
 				TeletypeCodingPanel.createOrShow(context);
