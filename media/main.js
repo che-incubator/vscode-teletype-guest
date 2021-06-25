@@ -80,7 +80,7 @@
       // bufferProxy.setTextInRange(...guestBufferDelegate.insert({row: 0, column: 0},'hello from a browser\n'))
       // bufferProxy.setTextInRange({row:0,column:0},{row: 0, column: 0}, "test");
 
-      VSCodeClient.openEditor(bufferProxy.uri, 'Hello');
+      VSCodeClient.openEditor(bufferProxy.uri, bufferProxy.document.documentTree.root.text);
     } catch (err) {
       console.log('Inside the catch block of creating teletype client');
 
