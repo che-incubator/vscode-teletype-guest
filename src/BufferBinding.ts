@@ -17,9 +17,7 @@ export default class BufferBinding {
 	private onInsert: any;
 	private onDelete: any;
 
-
-	constructor({ buffer, isHost, didDispose }: { buffer: any; isHost: any; didDispose: any; }) {
-
+	constructor(buffer: vscode.TextDocument, isHost: boolean, didDispose: Function) {
 		this.buffer = buffer;
 		this.isHost = isHost;
 		this.didDispose = didDispose;
@@ -28,9 +26,11 @@ export default class BufferBinding {
 	dispose() {
 		this.disposed = true;
 	}
+
 	isDisposed() {
 		return this.disposed;
 	}
+
 	getText() {
 		if (typeof this.onGetText === "function") {
 			return this.onGetText();
@@ -64,9 +64,7 @@ export default class BufferBinding {
 			return { row: start.row, column: start.column + distance.column };
 		}
 
-		else {
-			return { row: start.row + distance.row, column: distance.column };
-		}
+		return { row: start.row + distance.row, column: distance.column };
 	}
 
 	insert(position: any, text: any) {
@@ -76,6 +74,7 @@ export default class BufferBinding {
 		}
 		return [position, position, text];
 	}
+
 	delete(startPosition: any, extent: any) {
 		console.log("buffer delete start pos:" + startPosition + " extent: " + extent);
 		if (typeof this.onDelete === "function") {
