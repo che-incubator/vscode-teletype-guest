@@ -30,11 +30,13 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
+		"compile": "tsc -p ./ && npm run build",
 		"watch": "tsc -watch -p ./",
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "npm run compile && node ./node_modules/vscode/bin/test",
-		"package": "vsce package"
+		"package": "vsce package",
+    "build": "rollup -c",
+    "watch-proxy": "rollup -c --watch"
 	},
 	"devDependencies": {
 		"@mapbox/node-pre-gyp": "^1.0.5",
@@ -44,6 +46,10 @@
 		"@types/vscode-webview": "^1.57.0",
 		"awesome-typescript-loader": "^5.2.1",
 		"deep-equal": "^1.1.1",
+		"rollup": "^2.56.0",
+		"rollup-plugin-node-resolve": "^5.2.0",
+		"rollup-plugin-terser": "^7.0.2",
+		"rollup-plugin-typescript": "^1.0.1",
 		"source-map-loader": "^0.2.4",
 		"tslint": "^5.20.1",
 		"typescript": "^3.9.7",

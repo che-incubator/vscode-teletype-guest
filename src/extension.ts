@@ -1,6 +1,7 @@
 'use strict';
 
 import * as vscode from 'vscode';
+import BufferBinding from './BufferBinding';
 import PortalBinding from './PortalBinding';
 
 const fs = require('fs');
@@ -200,7 +201,12 @@ class TeletypeCodingPanel {
 			const tempFilename = await this._workspace.writeFile(filename, content);
 			const uri = vscode.Uri.file(tempFilename);
 
-			await vscode.window.showTextDocument(uri);
+			const editor = await vscode.window.showTextDocument(uri);
+			const bufferBinding = new BufferBinding(editor.document, false, () => {});
+
+			bufferBinding.setEditor(editor);
+
+			// vscode.window.on
 		} catch (err) {
 			vscode.window.showErrorMessage(err.message);
 		}
@@ -228,10 +234,12 @@ class TeletypeCodingPanel {
 	private _getHtmlForWebview(webview: vscode.Webview) {
 		// Local path to main script run in the webview
 		const scriptPathOnDisk = (vscode.Uri as any).joinPath(this._context.extensionUri, 'media', 'main.js');
+		const vsapiPathOnDisk = (vscode.Uri as any).joinPath(this._context.extensionUri, 'media', 'vsapi.min.js');
 		const teletypeScriptPathOnDisk = (vscode.Uri as any).joinPath(this._context.extensionUri, 'media', 'cheteletype.js');
 
 		// And the uri we use to load this script in the webview
 		const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
+		const vsapiScriptUri = webview.asWebviewUri(vsapiPathOnDisk);
 		const teletypeScriptUri = webview.asWebviewUri(teletypeScriptPathOnDisk);
 
 		// Local path to css styles
@@ -268,6 +276,7 @@ class TeletypeCodingPanel {
 			<body>
 				<h1>Teletype Client Panel</h1>
 
+				<script nonce="${nonce}" src="${vsapiScriptUri}"></script>
 				<script nonce="${nonce}" src="${teletypeScriptUri}"></script>
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
