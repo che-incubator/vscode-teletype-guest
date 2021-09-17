@@ -5,7 +5,7 @@
     const message = event.data;
 
     switch (message.command) {
-      case 'init': {
+      case 'portal-connection-info': {
         await joinPortal(message.data);
         vscode.postMessage({ command: 'init.ok' });
         break;
@@ -14,6 +14,11 @@
   });
 
   const VSCodeClient = {
+    getPortalConnectionInfo() {
+      vscode.postMessage({
+        command: 'get-portal-connection-info',
+      });
+    },
     showInformationMessage(text) {
       vscode.postMessage({
         command: 'show-info-message',
@@ -59,9 +64,7 @@
 
       console.log('Inside the try block of creating teletype client');
 
-      client.initialize();
-
-      const portalDelegate = CheTeletype.createPortalBinding()
+      const portalDelegate = CheTeletype.createPortalBinding();
       const portal =  await client.joinPortal(portalId);
 
       VSCodeClient.showInformationMessage(`Joined Portal with ID ${portalId}`);
@@ -73,14 +76,19 @@
       const bufferProxy = editorProxy.bufferProxy;
       const bufferDelegate = CheTeletype.createBufferBinding();
 
-      bufferProxy.setDelegate(bufferDelegate)
+      bufferProxy.setDelegate(bufferDelegate);
 
-      console.log(bufferProxy);
+      // console.log(bufferProxy);
+      console.log(bufferProxy.emitter.handlersByEventName);
+      console.log('>>>', vsapi.TextDocument('http://'));
 
       // bufferProxy.setTextInRange(...guestBufferDelegate.insert({row: 0, column: 0},'hello from a browser\n'))
       // bufferProxy.setTextInRange({row:0,column:0},{row: 0, column: 0}, "test");
 
+      console.log(bufferProxy.document.documentTree.root.text);
       VSCodeClient.openEditor(bufferProxy.uri, bufferProxy.document.documentTree.root.text);
+
+      // debugger;
     } catch (err) {
       console.log('Inside the catch block of creating teletype client');
 
@@ -92,4 +100,6 @@
     // portal_binding = new PortalBinding({ client: client, portalId: portalId, editor: textEditor });
     // await portal_binding.initialize();
   }
+
+  VSCodeClient.getPortalConnectionInfo();
 }());

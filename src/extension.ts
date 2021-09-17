@@ -116,14 +116,10 @@ class TeletypeCodingPanel {
 		);
 
 		TeletypeCodingPanel.currentPanel = new TeletypeCodingPanel(panel, context);
-
-		await TeletypeCodingPanel.currentPanel.initialize();
 	}
 
 	public static async revive(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
 		TeletypeCodingPanel.currentPanel = new TeletypeCodingPanel(panel, context);
-
-		await TeletypeCodingPanel.currentPanel.initialize();
 	}
 
 	private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
@@ -153,6 +149,10 @@ class TeletypeCodingPanel {
 		this._panel.webview.onDidReceiveMessage(
 			async (message) => {
 				switch (message.command) {
+					case 'get-portal-connection-info':
+						this.initialize();
+						return;
+
 					case 'init.ok':
 						return;
 
@@ -180,8 +180,9 @@ class TeletypeCodingPanel {
 
 	public async initialize() {
 		await this._workspace.initialize();
+
 		this._panel.webview.postMessage({
-			command: 'init',
+			command: 'portal-connection-info',
 			data: {
 				endpoint: constants.API_URL_BASE,
 				authToken: this._context.globalState.get('authToken') as string,
