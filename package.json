@@ -36,7 +36,7 @@
 		"test": "npm run compile && node ./node_modules/vscode/bin/test",
 		"package": "vsce package",
     "build": "rollup -c",
-    "watch-proxy": "rollup -c --watch"
+    "watch-vsapi": "rollup -c --watch"
 	},
 	"devDependencies": {
 		"@mapbox/node-pre-gyp": "^1.0.5",

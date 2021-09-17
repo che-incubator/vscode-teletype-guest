@@ -20,7 +20,7 @@ export default {
     format: 'umd',
     name: MODULE_NAME,
     indent: false,
-    sourcemap: true,
+    sourcemap: 'inline',
     exports: 'named',
   },
   plugins: [
